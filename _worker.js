@@ -1,12 +1,27 @@
+const TELEGRAPH_URL = 'https://www.google.com';
+
+
 export default {
-    async fetch(request, env) {
-      let url = new URL(request.url);
-      if (url.pathname.startsWith('/')) {
-        url.hostname="example.com";
-        let new_request=new Request(url,request);
-        return fetch(new_request);
-      }
-      // Otherwise, serve the static assets.
-      return env.ASSETS.fetch(request);
-    }
-  };
+  async fetch(request, env) {
+      const NewResponse = await handleRequest(request)
+      return NewResponse
+  },
+
+};
+
+async function handleRequest(request) {
+  const url = new URL(request.url);
+  const headers_Origin = request.headers.get("Access-Control-Allow-Origin") || "*"
+  url.host = TELEGRAPH_URL.replace(/^https?:\/\//, '');
+  const modifiedRequest = new Request(url.toString(), {
+    headers: request.headers,
+    method: request.method,
+    body: request.body,
+    redirect: 'follow'
+  });
+  const response = await fetch(modifiedRequest);
+  const modifiedResponse = new Response(response.body, response);
+  // 添加允许跨域访问的响应头
+  modifiedResponse.headers.set('Access-Control-Allow-Origin', headers_Origin);
+  return modifiedResponse;
+}
